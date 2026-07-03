@@ -131,9 +131,10 @@ function WalletApp() {
     const rootAddress = await client.readContract({ address: goodDollarIdentityCelo.address, abi: goodDollarIdentityAbi, functionName: "getWhitelistedRoot", args: [address] });
 
     if (rootAddress === zeroAddress) {
-      setClaimableAmount("—");
-      setGoodDollarMessage("This wallet is not verified for GoodDollar UBI yet. Verify your GoodDollar identity in GoodWallet/GoodDapp, then come back and claim here.");
-      return undefined;
+      setClaimStatus("unverified");
+      setClaimableAmount("Not eligible yet");
+      setGoodDollarMessage("Face verification is required before this wallet becomes eligible for GoodDollar UBI. Open GoodDapp/GoodWallet, complete face verification, then return here to claim.");
+      return { entitlement: 0n, formattedEntitlement: "Not eligible yet", eligible: false } as const;
     }
 
     const entitlement = await client.readContract({ address: ubiSchemeCelo.address, abi: ubiSchemeAbi, functionName: "checkEntitlement", args: [rootAddress] });
@@ -141,22 +142,25 @@ function WalletApp() {
 
     if (entitlement > 0n) {
       clearSavedNextClaim();
+      setClaimStatus("success");
       setClaimableAmount(formattedEntitlement);
       setGoodDollarMessage(`Claimable now: ${formattedEntitlement}.`);
     } else {
       const inferredNextClaimAt = getNextGoodDollarClaimWindow();
 
       if (nextClaimAt && nextClaimAt > Date.now()) {
+        setClaimStatus("claimed");
         setClaimableAmount("Already claimed");
         setGoodDollarMessage("You already claimed today's GoodDollar UBI. The panel will unlock after the next daily claim window.");
       } else {
         saveNextClaim(inferredNextClaimAt);
+        setClaimStatus("claimed");
         setClaimableAmount("Already claimed");
         setGoodDollarMessage("You already claimed today's GoodDollar UBI. GoodDollar resets daily at 12:00 PM UTC / 8:00 PM Philippines time.");
       }
     }
 
-    return { entitlement, formattedEntitlement };
+    return { entitlement, formattedEntitlement, eligible: true } as const;
   }, [address, clearSavedNextClaim, client, nextClaimAt, saveNextClaim]);
 
   useEffect(() => {
@@ -192,8 +196,9 @@ function WalletApp() {
 
   useEffect(() => {
     if (!address) {
-      setClaimableAmount("—");
-      setGoodDollarMessage("Connect your wallet to load your daily UBI amount from the GoodDollar contract.");
+      setClaimStatus("idle");
+      setClaimableAmount("Connect wallet");
+      setGoodDollarMessage("Connect your wallet to load your GoodDollar eligibility and daily UBI amount from the contract.");
       return;
     }
 
@@ -203,7 +208,6 @@ function WalletApp() {
       setGoodDollarMessage("Loading your claimable UBI from the GoodDollar contract...");
       try {
         await loadClaimableAmount();
-        if (!cancelled) setClaimStatus("idle");
       } catch (error) {
         if (!cancelled) {
           setClaimStatus("error");
@@ -244,10 +248,16 @@ function WalletApp() {
         return;
       }
 
-      const { entitlement, formattedEntitlement } = claimPreview;
+      const { entitlement, formattedEntitlement, eligible } = claimPreview;
+
+      if (!eligible) {
+        setClaimStatus("unverified");
+        return;
+      }
 
       if (entitlement <= 0n) {
-        setClaimStatus("success");
+        setClaimStatus("claimed");
+        setClaimableAmount("Already claimed");
         setGoodDollarMessage("No UBI is claimable right now. Please try again after the next daily claim window.");
         return;
       }
@@ -260,12 +270,18 @@ function WalletApp() {
       setTransactions((current) => [createSubmittedClaimTransaction(hash, formattedEntitlement), ...current]);
       setClaimableAmount("Already claimed");
       saveNextClaim(getNextGoodDollarClaimWindow());
-      setClaimStatus("success");
+      setClaimStatus("claimed");
       await Promise.allSettled([loadBalances(), loadTransactions()]);
     } catch (error) {
       setClaimStatus("error");
       const message = error instanceof Error ? error.message : "Unable to claim UBI.";
-      setGoodDollarMessage(message.includes("not whitelisted") ? "This wallet is not verified for GoodDollar UBI yet. Verify your GoodDollar identity in GoodWallet/GoodDapp, then come back and claim here." : message);
+      if (message.includes("not whitelisted")) {
+        setClaimStatus("unverified");
+        setClaimableAmount("Not eligible yet");
+        setGoodDollarMessage("Face verification is required before this wallet becomes eligible for GoodDollar UBI. Open GoodDapp/GoodWallet, complete face verification, then return here to claim.");
+      } else {
+        setGoodDollarMessage(message);
+      }
     }
   }
 

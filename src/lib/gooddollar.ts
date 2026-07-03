@@ -1,7 +1,7 @@
 import { createWalletClient, custom, formatUnits, type Address } from "viem";
 import { celoMainnet, goodDollarCelo } from "@/lib/celo";
 
-export type GoodDollarStatus = "idle" | "loading" | "success" | "error";
+export type GoodDollarStatus = "idle" | "loading" | "success" | "claimed" | "unverified" | "error";
 
 export const ubiSchemeCelo = {
   name: "GoodDollar UBI Scheme",
