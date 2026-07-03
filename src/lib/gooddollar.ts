@@ -4,32 +4,23 @@ import { celoMainnet, goodDollarCelo } from "@/lib/celo";
 export type GoodDollarStatus = "idle" | "loading" | "success" | "claimed" | "unverified" | "error";
 
 
-const GOODID_FACE_VERIFICATION_URL = "https://goodid.gooddollar.org/";
-const GOODID_IDENTIFIER_MESSAGE = "Sign this message to generate your anonymous GoodDollar Face Verification identifier.";
-
 export type GoodIdFaceVerificationLinkParams = {
-  address: Address;
-  signature: string;
-  firstName?: string;
+  walletClient: Awaited<ReturnType<typeof createPrivyWalletClient>>;
   callbackUrl?: string;
   popupMode?: boolean;
   chainId?: number;
 };
 
-export function getGoodIdIdentifierMessage(address: Address) {
-  return `${GOODID_IDENTIFIER_MESSAGE}\n\nWallet: ${address}`;
-}
+type GoodIdIdentitySdk = {
+  generateFVLink: (popupMode?: boolean, callbackUrl?: string, chainId?: number) => Promise<string>;
+};
 
-export function createGoodIdFaceVerificationLink({ address, signature, firstName = "friend", callbackUrl, popupMode = false, chainId = celoMainnet.id }: GoodIdFaceVerificationLinkParams) {
-  const url = new URL(GOODID_FACE_VERIFICATION_URL);
-  url.searchParams.set("firstName", firstName);
-  url.searchParams.set("account", address);
-  url.searchParams.set("signature", signature);
-  url.searchParams.set("chainId", chainId.toString());
-  url.searchParams.set("popupMode", popupMode ? "true" : "false");
-  if (callbackUrl) url.searchParams.set("callbackUrl", callbackUrl);
+export async function createGoodIdFaceVerificationLink({ walletClient, callbackUrl, popupMode = false, chainId = celoMainnet.id }: GoodIdFaceVerificationLinkParams) {
+  const importCitizenSdk = new Function("packageName", "return import(packageName)") as (packageName: string) => Promise<{ IdentitySDK: new (...args: unknown[]) => GoodIdIdentitySdk }> ;
+  const { IdentitySDK } = await importCitizenSdk("https://esm.sh/@goodsdks/citizen-sdk");
+  const identitySdk = new IdentitySDK(undefined, walletClient, "production") as GoodIdIdentitySdk;
 
-  return url.toString();
+  return identitySdk.generateFVLink(popupMode, callbackUrl, chainId);
 }
 
 export const ubiSchemeCelo = {
