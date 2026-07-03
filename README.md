@@ -5,7 +5,7 @@ A Celo + GoodDollar powered mini app hub with Privy wallet onboarding and Supaba
 ## MVP scope
 
 - Intro landing page with a `Get Started` wallet onboarding call-to-action.
-- Privy email/Google login with embedded wallet creation.
+- Privy email, Google, and external wallet login with embedded wallet creation for users without wallets.
 - Celo Mainnet and Celo Sepolia chain configuration.
 - GoodDollar `G$` Celo token balance display.
 - Supabase profile upsert after wallet login.
@@ -16,12 +16,11 @@ A Celo + GoodDollar powered mini app hub with Privy wallet onboarding and Supaba
 
 ```bash
 NEXT_PUBLIC_PRIVY_APP_ID=
-NEXT_PUBLIC_PRIVY_CLIENT_ID= # optional for React web apps
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
-`NEXT_PUBLIC_PRIVY_APP_ID` is required before the Privy modal is mounted. `NEXT_PUBLIC_PRIVY_CLIENT_ID` is optional for React web apps; if you use a client-specific configuration, find or create it in the Privy dashboard under **Configuration → App settings → Clients** and copy the web app client ID. Make sure your deployed origin is allowlisted and Google/email login is enabled, otherwise the Privy modal can show `Something went wrong` during account creation.
+`NEXT_PUBLIC_PRIVY_APP_ID` is required before the Privy modal is mounted. Do not put OAuth client secrets or social provider client IDs in this frontend; configure Google/email/wallet login in the Privy dashboard instead. Make sure your deployed origin is allowlisted and Google, email, and wallet login are enabled in Privy, otherwise the Privy modal can show `Something went wrong` during account creation.
 
 ## Celo and G$ constants
 
