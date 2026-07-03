@@ -187,6 +187,8 @@ export async function approveToken(
 }
 
 // Get estimated G$ amount when buying with cUSD
+// G$ has 2 decimals, cUSD has 18 decimals
+// Rate: 1 cUSD = 100 G$ (100:1 ratio)
 export async function getBuyReturn(client: ReturnType<typeof getPublicClient>, cusdAmount: bigint): Promise<bigint> {
   try {
     return await client.readContract({
@@ -196,12 +198,17 @@ export async function getBuyReturn(client: ReturnType<typeof getPublicClient>, c
       args: [cusdToken.address, cusdAmount],
     });
   } catch {
-    // Fallback calculation: assume 1:1 rate (1 cUSD = 100 G$ since G$ has 2 decimals)
-    return cusdAmount * 100n;
+    // Fallback: 1 cUSD = 100 G$
+    // cusdAmount (18 dec) / 10^16 = adjusted amount
+    // adjusted * 100 = G$ in 2 dec
+    // Net: cusdAmount * 100 / 10^16 = cusdAmount / 10^14
+    return cusdAmount / 100_000_000_000_000n; // 10^14
   }
 }
 
 // Get estimated cUSD amount when selling G$
+// G$ has 2 decimals, cUSD has 18 decimals
+// Rate: 100 G$ = 1 cUSD (100:1 ratio)
 export async function getSellReturn(client: ReturnType<typeof getPublicClient>, gdAmount: bigint): Promise<bigint> {
   try {
     return await client.readContract({
@@ -211,8 +218,11 @@ export async function getSellReturn(client: ReturnType<typeof getPublicClient>, 
       args: [cusdToken.address, gdAmount],
     });
   } catch {
-    // Fallback calculation: assume 1:100 rate (100 G$ = 1 cUSD since G$ has 2 decimals)
-    return gdAmount / 100n;
+    // Fallback: 100 G$ = 1 cUSD
+    // gdAmount (2 dec) * 10^16 = adjusted for 18 dec
+    // adjusted * 100 = cUSD
+    // Net: gdAmount * 10^14
+    return gdAmount * 100_000_000_000_000n; // 10^14
   }
 }
 
