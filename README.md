@@ -16,9 +16,12 @@ A Celo + GoodDollar powered mini app hub with Privy wallet onboarding and Supaba
 
 ```bash
 NEXT_PUBLIC_PRIVY_APP_ID=
+NEXT_PUBLIC_PRIVY_CLIENT_ID=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
+
+`NEXT_PUBLIC_PRIVY_CLIENT_ID` should be the web app client ID from the Privy dashboard. Make sure the same Privy client has your deployed origin allowlisted and Google/email/wallet login enabled, otherwise the Privy modal can show `Something went wrong` during account creation.
 
 ## Celo and G$ constants
 
