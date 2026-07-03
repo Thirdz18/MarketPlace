@@ -174,7 +174,7 @@ export async function approveToken(
   walletClient: Awaited<ReturnType<typeof createWalletClientFromPrivy>>,
   tokenAddress: Address,
   spenderAddress: Address,
-  amount: bigint = BigInt(2 ** 256 - 1), // Max approval by default
+  amount: bigint = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), // Max approval (type(uint256).max)
 ) {
   return walletClient.writeContract({
     address: tokenAddress,
