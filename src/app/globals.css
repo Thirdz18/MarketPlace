@@ -16,7 +16,7 @@ p { color:#cbd3eb; font-size:.98rem; line-height:1.55; }
 .cta button, .claim-card button { border-radius:999px; background:linear-gradient(135deg, var(--green), #60e6a2); color:#03150b; padding:15px 24px; font-weight:950; box-shadow:0 14px 30px rgba(53,208,127,.24); }
 button:disabled { cursor:not-allowed; opacity:.58; }
 .warning code { color:var(--gold); }
-.app-layout { width:100%; min-height:100vh; display:grid; grid-template-columns:minmax(210px, 240px) minmax(0, 1fr); gap:14px; padding:16px; }
+.app-layout { --dashboard-scale:.8; width:calc(100% / var(--dashboard-scale)); min-height:calc(100vh / var(--dashboard-scale)); display:grid; grid-template-columns:minmax(210px, 240px) minmax(0, 1fr); gap:14px; padding:16px; transform:scale(var(--dashboard-scale)); transform-origin:top left; }
 .sidebar { position:sticky; top:16px; align-self:start; max-height:calc(100vh - 32px); display:flex; flex-direction:column; gap:10px; background:rgba(9,14,30,.92); border:1px solid var(--line); border-radius:22px; padding:12px; overflow:auto; }
 .brand-block { display:flex; gap:10px; align-items:center; padding:8px 6px 12px; border-bottom:1px solid rgba(255,255,255,.08); }
 .brand-mark, .side-icon, .token-icon, .tx-badge { display:grid; place-items:center; flex:0 0 auto; border-radius:999px; font-weight:950; }
@@ -61,7 +61,7 @@ button:disabled { cursor:not-allowed; opacity:.58; }
   .wallet-hero { grid-template-columns:1fr; }
 }
 @media (max-width: 900px) {
-  .app-layout { grid-template-columns:1fr; padding:14px; }
+  .app-layout { --dashboard-scale:1; width:100%; min-height:100vh; grid-template-columns:1fr; padding:14px; transform:none; }
   .sidebar { position:static; height:auto; }
   .side-nav { grid-template-columns:repeat(2, minmax(0, 1fr)); }
   .logout-button { margin-top:0; }
