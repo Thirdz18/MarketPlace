@@ -9,6 +9,8 @@ function maskAddress(address: string | undefined): string {
 }
 
 export function WalletPanel({ address, profileStatus, tokens, transactions, transactionsLoading, transactionsError }: { address?: string; profileStatus: string; tokens: TokenBalance[]; transactions: WalletTransaction[]; transactionsLoading: boolean; transactionsError?: string }) {
+  const visibleTokens = tokens.filter((token) => token.symbol === "G$");
+
   return (
     <div className="content-stack">
       {/* Wallet Info Header */}
@@ -33,11 +35,11 @@ export function WalletPanel({ address, profileStatus, tokens, transactions, tran
       <section className="wallet-main">
         {/* Left Column: Balance Cards */}
         <div className="balance-column">
-          <div className="section-heading"><div><p className="eyebrow">Supported tokens · Celo Network</p><h2>Your balances</h2></div></div>
+          <div className="section-heading"><div><p className="eyebrow">GoodDollar · Celo Network</p><h2>GoodDollar balance</h2></div></div>
           
-          {/* Balance Cards */}
-          <div className="balance-cards-grid" aria-label="GoodDollar and Celo wallet balances">
-            {tokens.map((token) => (
+          {/* Balance Card */}
+          <div className="balance-cards-grid" aria-label="GoodDollar wallet balance">
+            {visibleTokens.map((token) => (
               <article className="balance-card-new" key={`${token.symbol}-balance`}>
                 <div className="balance-card-header">
                   <span className={`token-icon token-${token.symbol === "G$" ? "gd" : "celo"}`}>{token.symbol}</span>
@@ -48,18 +50,6 @@ export function WalletPanel({ address, profileStatus, tokens, transactions, tran
                   <span className="token-symbol-badge">{token.symbol}</span>
                 </div>
                 {token.note && <small className="balance-note">{token.note}</small>}
-              </article>
-            ))}
-          </div>
-
-          {/* Token List */}
-          <div className="token-list">
-            <div className="section-heading"><div><p className="eyebrow">Token List</p><h3>All tokens</h3></div></div>
-            {tokens.map((token) => (
-              <article className="token-row" key={token.symbol}>
-                <span className={`token-icon token-${token.symbol === "G$" ? "gd" : "celo"}`}>{token.symbol}</span>
-                <div><strong>{token.symbol}</strong><small>{token.name}</small></div>
-                <div className="token-amount"><strong>{token.amount} {token.symbol}</strong>{token.note && <small>{token.note}</small>}</div>
               </article>
             ))}
           </div>
