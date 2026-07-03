@@ -6,12 +6,10 @@ import { createPublicClient, formatUnits, http, type Address } from "viem";
 import { celoMainnet, erc20BalanceAbi, goodDollarCelo } from "@/lib/celo";
 import { featureModules } from "@/lib/modules";
 import {
-  createClaimSdk,
-  createIdentitySdk,
   createPrivyWalletClient,
   formatGoodDollarAmount,
-  goodDollarIdentityCallbackPath,
-  identityCallbackUrl,
+  ubiSchemeAbi,
+  ubiSchemeCelo,
   type GoodDollarStatus,
 } from "@/lib/gooddollar";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -38,11 +36,9 @@ function WalletApp() {
   const [balance, setBalance] = useState<string>("—");
   const [tapPoints, setTapPoints] = useState(0);
   const [profileStatus, setProfileStatus] = useState("Waiting for wallet...");
-  const [identityStatus, setIdentityStatus] = useState<GoodDollarStatus>("idle");
   const [claimStatus, setClaimStatus] = useState<GoodDollarStatus>("idle");
-  const [goodDollarMessage, setGoodDollarMessage] = useState("Connect your wallet to check GoodDollar identity status.");
+  const [goodDollarMessage, setGoodDollarMessage] = useState("Click the button to load your daily UBI amount from the GoodDollar contract.");
   const [claimableAmount, setClaimableAmount] = useState("—");
-  const [nextClaimTime, setNextClaimTime] = useState<string | null>(null);
 
   const client = useMemo(() => createPublicClient({ chain: celoMainnet, transport: http() }), []);
 
@@ -78,98 +74,46 @@ function WalletApp() {
 
 
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("gooddollar") !== "identity-callback") return;
-
-    const verified = params.get("isVerified");
-    const reason = params.get("reason");
-    if (verified === "true") {
-      setIdentityStatus("success");
-      setGoodDollarMessage("Face verification completed. Check entitlement, then claim your UBI.");
-    } else if (verified === "false") {
-      setIdentityStatus("error");
-      setGoodDollarMessage(reason ? `Face verification failed: ${reason}` : "Face verification was not completed.");
-    }
-  }, []);
-
-  async function checkIdentity() {
-    if (!address || !wallet) return;
-    setIdentityStatus("loading");
-    setGoodDollarMessage("Checking GoodDollar identity whitelist...");
-
-    try {
-      const walletClient = await createPrivyWalletClient(wallet);
-      const identitySdk = await createIdentitySdk(client, walletClient);
-      const result = await identitySdk.getWhitelistedRoot(address);
-      setIdentityStatus(result.isWhitelisted ? "success" : "idle");
-      setGoodDollarMessage(
-        result.isWhitelisted
-          ? "Wallet is verified for GoodDollar UBI claims."
-          : "Wallet is not verified yet. Start Face Verification to become eligible for UBI claims.",
-      );
-    } catch (error) {
-      setIdentityStatus("error");
-      setGoodDollarMessage(error instanceof Error ? error.message : "Unable to check GoodDollar identity.");
-    }
-  }
-
-  async function startFaceVerification() {
-    if (!wallet) return;
-    setIdentityStatus("loading");
-    setGoodDollarMessage("Generating GoodDollar Face Verification link...");
-
-    try {
-      const walletClient = await createPrivyWalletClient(wallet);
-      const identitySdk = await createIdentitySdk(client, walletClient);
-      const link = await identitySdk.generateFVLink(false, identityCallbackUrl(), celoMainnet.id);
-      window.location.href = link;
-    } catch (error) {
-      setIdentityStatus("error");
-      setGoodDollarMessage(error instanceof Error ? error.message : "Unable to start Face Verification.");
-    }
-  }
-
-  async function checkEntitlement() {
-    if (!address || !wallet) return;
-    setClaimStatus("loading");
-    setGoodDollarMessage("Checking daily GoodDollar UBI entitlement...");
-
-    try {
-      const walletClient = await createPrivyWalletClient(wallet);
-      const identitySdk = await createIdentitySdk(client, walletClient);
-      const claimSdk = await createClaimSdk(address, client, walletClient, identitySdk);
-      const entitlement = await claimSdk.checkEntitlement();
-      setClaimableAmount(formatGoodDollarAmount(entitlement));
-
-      if (claimSdk.nextClaimTime) {
-        const nextClaim = await claimSdk.nextClaimTime();
-        setNextClaimTime(nextClaim.toLocaleString());
-      }
-
-      setClaimStatus("success");
-      setGoodDollarMessage(entitlement > 0n ? "UBI is available. You can claim now." : "No UBI is available yet. Check the next claim time.");
-    } catch (error) {
-      setClaimStatus("error");
-      setGoodDollarMessage(error instanceof Error ? error.message : "Unable to check UBI entitlement.");
-    }
-  }
-
   async function claimUbi() {
     if (!address || !wallet) return;
     setClaimStatus("loading");
-    setGoodDollarMessage("Submitting GoodDollar UBI claim...");
+    setGoodDollarMessage("Loading your claimable UBI from the GoodDollar contract...");
 
     try {
+      const entitlement = await client.readContract({
+        address: ubiSchemeCelo.address,
+        abi: ubiSchemeAbi,
+        functionName: "checkEntitlement",
+        args: [address],
+      });
+      setClaimableAmount(formatGoodDollarAmount(entitlement));
+
+      if (entitlement <= 0n) {
+        setClaimStatus("success");
+        setGoodDollarMessage("No UBI is claimable right now. Please try again after the next daily claim window.");
+        return;
+      }
+
+      setGoodDollarMessage(`Claimable now: ${formatGoodDollarAmount(entitlement)}. Please confirm the transaction in your wallet.`);
       const walletClient = await createPrivyWalletClient(wallet);
-      const identitySdk = await createIdentitySdk(client, walletClient);
-      const claimSdk = await createClaimSdk(address, client, walletClient, identitySdk);
-      await claimSdk.claim();
+      const hash = await walletClient.writeContract({
+        address: ubiSchemeCelo.address,
+        abi: ubiSchemeAbi,
+        functionName: "claim",
+        account: address,
+        chain: celoMainnet,
+      });
+
+      setGoodDollarMessage(`UBI claim submitted. Transaction: ${hash}`);
       setClaimStatus("success");
-      setGoodDollarMessage("UBI claim submitted successfully. Refresh the balance after the transaction settles.");
     } catch (error) {
       setClaimStatus("error");
-      setGoodDollarMessage(error instanceof Error ? error.message : "Unable to claim UBI.");
+      const message = error instanceof Error ? error.message : "Unable to claim UBI.";
+      setGoodDollarMessage(
+        message.includes("not whitelisted")
+          ? "This wallet is not verified for GoodDollar UBI yet. Verify your GoodDollar identity in GoodWallet/GoodDapp, then come back and claim here."
+          : message,
+      );
     }
   }
 
@@ -188,20 +132,18 @@ function WalletApp() {
       </section>
       <section id="gooddollar-ubi" className="panel gooddollar-panel">
         <div>
-          <p className="eyebrow">Option B: Custom GoodDollar flow</p>
-          <h2>Verify identity and claim UBI</h2>
-          <p>Check whether this wallet is whitelisted, complete GoodDollar Face Verification when needed, then claim the daily UBI entitlement directly from your MarketPlace Hub wallet.</p>
-          <small>Face Verification returns to <code>{goodDollarIdentityCallbackPath}</code>.</small>
+          <p className="eyebrow">GoodDollar UBI</p>
+          <h2>Claim UBI daily</h2>
+          <p>Claim your daily GoodDollar UBI directly from the Celo UBI contract.</p>
+          <small>Claim UBI daily.</small>
         </div>
-        <div className="gooddollar-actions">
-          <button onClick={checkIdentity} disabled={identityStatus === "loading" || !address}>Check Identity</button>
-          <button onClick={startFaceVerification} disabled={identityStatus === "loading" || !address}>Start Face Verification</button>
-          <button onClick={checkEntitlement} disabled={claimStatus === "loading" || !address}>Check UBI</button>
-          <button onClick={claimUbi} disabled={claimStatus === "loading" || !address}>Claim UBI</button>
+        <div className="gooddollar-actions single-action">
+          <button onClick={claimUbi} disabled={claimStatus === "loading" || !address}>
+            {claimStatus === "loading" ? "Loading UBI..." : "Claim UBI daily"}
+          </button>
         </div>
         <div className="gooddollar-status">
           <span>Claimable amount</span><strong>{claimableAmount}</strong>
-          {nextClaimTime ? <><span>Next claim time</span><strong>{nextClaimTime}</strong></> : null}
           <small>{goodDollarMessage}</small>
         </div>
       </section>
