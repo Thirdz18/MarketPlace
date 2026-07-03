@@ -15,7 +15,7 @@ export function AppShell({ privyConfigured }: { privyConfigured: boolean }) {
 function SetupMode() {
   return (
     <main className="page"><Hero />
-      <section className="panel warning"><h2>Environment setup needed</h2><p>Add <code>NEXT_PUBLIC_PRIVY_APP_ID</code>, <code>NEXT_PUBLIC_SUPABASE_URL</code>, and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to enable wallet onboarding and offchain data. <code>NEXT_PUBLIC_PRIVY_CLIENT_ID</code> is optional for React web apps.</p></section>
+      <section className="panel warning"><h2>Environment setup needed</h2><p>Add <code>NEXT_PUBLIC_PRIVY_APP_ID</code>, <code>NEXT_PUBLIC_SUPABASE_URL</code>, and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to enable wallet onboarding and offchain data. Email, Google, and wallet login are configured in the Privy dashboard; no client secret or client ID belongs in this frontend.</p></section>
       <FeatureGrid />
     </main>
   );
@@ -65,7 +65,7 @@ function WalletApp() {
   if (!ready) return <main className="page"><Hero /><section className="panel">Loading Privy...</section></main>;
 
   if (!authenticated) {
-    return <main className="page"><Hero /><section className="cta"><button onClick={login}>Get Started — Create Celo Wallet</button><p>Sign in with email or Google. Privy will create a Celo-ready embedded wallet, then unlock your mini app dashboard.</p></section><FeatureGrid /></main>;
+    return <main className="page"><Hero /><section className="cta"><button onClick={login}>Get Started — Create Celo Wallet</button><p>Sign in with email, Google, or connect an existing wallet. Privy will create a Celo-ready embedded wallet for users who do not already have one, then unlock your mini app dashboard.</p></section><FeatureGrid /></main>;
   }
 
   return (
