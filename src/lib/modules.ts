@@ -1,8 +1,9 @@
-export type DashboardModuleId = "wallet" | "claim" | "savings" | "learn" | "play" | "topup";
+export type DashboardModuleId = "wallet" | "claim" | "swap" | "savings" | "learn" | "play" | "topup";
 
 export const dashboardModules = [
   { id: "wallet", label: "Wallet", icon: "⇄", description: "Balances and transaction history" },
   { id: "claim", label: "Claim", icon: "G$", description: "Claim daily GoodDollar UBI" },
+  { id: "swap", label: "GoodSwap", icon: "⇅", description: "Swap G$ ↔ cUSD via GoodReserve" },
   { id: "savings", label: "Savings", icon: "🏦", description: "Savings goals and future Celo vaults" },
   { id: "learn", label: "Learn & Earn", icon: "📚", description: "Education tasks and rewards" },
   { id: "play", label: "Play & Earn", icon: "🎮", description: "Minigames and reward loops" },

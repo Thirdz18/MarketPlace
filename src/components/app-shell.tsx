@@ -6,6 +6,7 @@ import { createPublicClient, formatUnits, http, type Address } from "viem";
 import { ClaimPanel } from "@/components/dashboard/claim-panel";
 import { PlaceholderPanel } from "@/components/dashboard/placeholder-panel";
 import { Sidebar } from "@/components/dashboard/sidebar";
+import { SwapPanel } from "@/components/dashboard/swap-panel";
 import { WalletPanel } from "@/components/dashboard/wallet-panel";
 import { celoMainnet, erc20BalanceAbi, goodDollarCelo } from "@/lib/celo";
 import { type DashboardModuleId } from "@/lib/modules";
@@ -336,7 +337,8 @@ function WalletApp() {
       <section className="main-pane">
         {activeModule === "wallet" && <WalletPanel address={address} profileStatus={profileStatus} tokens={tokenBalances} transactions={transactions} transactionsLoading={transactionsLoading} transactionsError={transactionsError} />}
         {activeModule === "claim" && <ClaimPanel claimableAmount={claimableAmount} claimStatus={claimStatus} goodDollarMessage={goodDollarMessage} nextClaimCountdown={nextClaimCountdown} nextClaimTime={nextClaimTime} onClaim={claimUbi} onVerify={openFaceVerification} disabled={isClaimActionDisabled} />}
-        {activeModule !== "wallet" && activeModule !== "claim" && <PlaceholderPanel moduleId={activeModule} />}
+        {activeModule === "swap" && <SwapPanel address={address} />}
+        {activeModule !== "wallet" && activeModule !== "claim" && activeModule !== "swap" && <PlaceholderPanel moduleId={activeModule} />}
       </section>
     </main>
   );
