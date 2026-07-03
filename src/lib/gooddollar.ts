@@ -1,4 +1,4 @@
-import { createWalletClient, custom, formatUnits, type Address } from "viem";
+import { createPublicClient, createWalletClient, custom, formatUnits, http, type Address } from "viem";
 import { celoMainnet, goodDollarCelo } from "@/lib/celo";
 
 export type GoodDollarStatus = "idle" | "loading" | "success" | "claimed" | "unverified" | "error";
@@ -18,7 +18,8 @@ type GoodIdIdentitySdk = {
 export async function createGoodIdFaceVerificationLink({ walletClient, callbackUrl, popupMode = false, chainId = celoMainnet.id }: GoodIdFaceVerificationLinkParams) {
   const importCitizenSdk = new Function("packageName", "return import(packageName)") as (packageName: string) => Promise<{ IdentitySDK: new (...args: unknown[]) => GoodIdIdentitySdk }> ;
   const { IdentitySDK } = await importCitizenSdk("https://esm.sh/@goodsdks/citizen-sdk");
-  const identitySdk = new IdentitySDK(undefined, walletClient, "production") as GoodIdIdentitySdk;
+  const publicClient = createPublicClient({ chain: celoMainnet, transport: http() });
+  const identitySdk = new IdentitySDK(publicClient, walletClient, "production") as GoodIdIdentitySdk;
 
   return identitySdk.generateFVLink(popupMode, callbackUrl, chainId);
 }
