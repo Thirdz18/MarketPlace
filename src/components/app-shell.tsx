@@ -8,9 +8,12 @@ import { featureModules } from "@/lib/modules";
 import {
   createPrivyWalletClient,
   formatGoodDollarAmount,
+  goodDollarIdentityAbi,
+  goodDollarIdentityCelo,
   ubiSchemeAbi,
   ubiSchemeCelo,
   type GoodDollarStatus,
+  zeroAddress,
 } from "@/lib/gooddollar";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
@@ -80,11 +83,25 @@ function WalletApp() {
     setGoodDollarMessage("Loading your claimable UBI from the GoodDollar contract...");
 
     try {
+      const rootAddress = await client.readContract({
+        address: goodDollarIdentityCelo.address,
+        abi: goodDollarIdentityAbi,
+        functionName: "getWhitelistedRoot",
+        args: [address],
+      });
+
+      if (rootAddress === zeroAddress) {
+        setClaimableAmount("—");
+        setClaimStatus("error");
+        setGoodDollarMessage("This wallet is not verified for GoodDollar UBI yet. Verify your GoodDollar identity in GoodWallet/GoodDapp, then come back and claim here.");
+        return;
+      }
+
       const entitlement = await client.readContract({
         address: ubiSchemeCelo.address,
         abi: ubiSchemeAbi,
         functionName: "checkEntitlement",
-        args: [address],
+        args: [rootAddress],
       });
       setClaimableAmount(formatGoodDollarAmount(entitlement));
 
