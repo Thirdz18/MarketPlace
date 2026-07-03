@@ -135,7 +135,8 @@ export function formatTokenAmount(value: bigint, decimals: number): string {
 export function parseTokenAmount(value: string, decimals: number): bigint {
   const parsed = parseFloat(value);
   if (isNaN(parsed) || parsed < 0) return 0n;
-  const multiplier = BigInt(10 ** decimals);
+  // Use string-based BigInt to avoid Number overflow for large decimals
+  const multiplier = BigInt("1" + "0".repeat(decimals));
   return BigInt(Math.floor(parsed * Number(multiplier)));
 }
 
