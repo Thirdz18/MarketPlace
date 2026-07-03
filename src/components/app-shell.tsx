@@ -13,7 +13,6 @@ import {
   createGoodIdFaceVerificationLink,
   createPrivyWalletClient,
   formatGoodDollarAmount,
-  getGoodIdIdentifierMessage,
   goodDollarIdentityAbi,
   goodDollarIdentityCelo,
   ubiSchemeAbi,
@@ -84,7 +83,6 @@ function WalletApp() {
   const [claimStatus, setClaimStatus] = useState<GoodDollarStatus>("idle");
   const [goodDollarMessage, setGoodDollarMessage] = useState("Click the button to load your daily UBI amount from the GoodDollar contract.");
   const [claimableAmount, setClaimableAmount] = useState("—");
-  const [verificationLink, setVerificationLink] = useState<string>();
   const [nextClaimAt, setNextClaimAt] = useState<number>();
   const [now, setNow] = useState(() => Date.now());
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
@@ -136,11 +134,10 @@ function WalletApp() {
     if (rootAddress === zeroAddress) {
       setClaimStatus("unverified");
       setClaimableAmount("Not eligible yet");
-      setGoodDollarMessage("Face verification is required before this wallet becomes eligible for GoodDollar UBI. Use the GoodID verification link below, complete face verification, then return here to claim.");
+      setGoodDollarMessage("Face verification is required before this wallet becomes eligible for GoodDollar UBI. Tap Verify face first, sign the GoodID request, complete face verification, then return here to claim.");
       return { entitlement: 0n, formattedEntitlement: "Not eligible yet", eligible: false } as const;
     }
 
-    setVerificationLink(undefined);
     const entitlement = await client.readContract({ address: ubiSchemeCelo.address, abi: ubiSchemeAbi, functionName: "checkEntitlement", args: [rootAddress] });
     const formattedEntitlement = formatGoodDollarAmount(entitlement);
 
@@ -201,7 +198,6 @@ function WalletApp() {
   useEffect(() => {
     if (!address) {
       setClaimStatus("idle");
-      setVerificationLink(undefined);
       setClaimableAmount("Connect wallet");
       setGoodDollarMessage("Connect your wallet to load your GoodDollar eligibility and daily UBI amount from the contract.");
       return;
@@ -243,21 +239,19 @@ function WalletApp() {
   async function openFaceVerification() {
     if (!address || !wallet) return;
     setClaimStatus("loading");
-    setGoodDollarMessage("Please sign the GoodID verification request in your wallet. This creates your embedded Face Verification link.");
+    setGoodDollarMessage("Please sign the GoodID verification request in your wallet. You will be redirected to GoodID Face Verification automatically.");
 
     try {
       const walletClient = await createPrivyWalletClient(wallet);
-      const signature = await walletClient.signMessage({ account: address, message: getGoodIdIdentifierMessage(address) });
       const callbackUrl = typeof window !== "undefined" ? window.location.href : undefined;
-      const link = createGoodIdFaceVerificationLink({ address, signature, callbackUrl, chainId: celoMainnet.id });
+      const link = await createGoodIdFaceVerificationLink({ walletClient, callbackUrl, chainId: celoMainnet.id });
 
-      setVerificationLink(link);
       setClaimStatus("unverified");
-      setGoodDollarMessage("GoodID Face Verification link is ready. Open it, finish verification, then return here and claim your daily UBI.");
-      window.open(link, "_blank", "noopener,noreferrer");
+      setGoodDollarMessage("Redirecting to GoodID Face Verification. Finish verification, then return here and claim your daily UBI.");
+      window.location.href = link;
     } catch (error) {
       setClaimStatus("unverified");
-      setGoodDollarMessage(error instanceof Error ? error.message : "Unable to generate your GoodID Face Verification link.");
+      setGoodDollarMessage(error instanceof Error ? error.message : "Unable to start GoodID Face Verification.");
     }
   }
 
@@ -304,7 +298,7 @@ function WalletApp() {
       if (message.includes("not whitelisted")) {
         setClaimStatus("unverified");
         setClaimableAmount("Not eligible yet");
-        setGoodDollarMessage("Face verification is required before this wallet becomes eligible for GoodDollar UBI. Use the GoodID verification link below, complete face verification, then return here to claim.");
+        setGoodDollarMessage("Face verification is required before this wallet becomes eligible for GoodDollar UBI. Tap Verify face first, sign the GoodID request, complete face verification, then return here to claim.");
       } else {
         setGoodDollarMessage(message);
       }
@@ -329,7 +323,7 @@ function WalletApp() {
       <Sidebar activeModule={activeModule} onSelect={setActiveModule} onLogout={logout} />
       <section className="main-pane">
         {activeModule === "wallet" && <WalletPanel address={address} profileStatus={profileStatus} tokens={tokenBalances} transactions={transactions} transactionsLoading={transactionsLoading} transactionsError={transactionsError} />}
-        {activeModule === "claim" && <ClaimPanel claimableAmount={claimableAmount} claimStatus={claimStatus} goodDollarMessage={goodDollarMessage} nextClaimCountdown={nextClaimCountdown} nextClaimTime={nextClaimTime} verificationLink={verificationLink} onClaim={claimUbi} onVerify={openFaceVerification} disabled={isClaimActionDisabled} />}
+        {activeModule === "claim" && <ClaimPanel claimableAmount={claimableAmount} claimStatus={claimStatus} goodDollarMessage={goodDollarMessage} nextClaimCountdown={nextClaimCountdown} nextClaimTime={nextClaimTime} onClaim={claimUbi} onVerify={openFaceVerification} disabled={isClaimActionDisabled} />}
         {activeModule !== "wallet" && activeModule !== "claim" && <PlaceholderPanel moduleId={activeModule} />}
       </section>
     </main>

@@ -6,7 +6,6 @@ type ClaimPanelProps = {
   goodDollarMessage: string;
   nextClaimCountdown?: string;
   nextClaimTime?: string;
-  verificationLink?: string;
   onClaim: () => void;
   onVerify: () => void;
   disabled: boolean;
@@ -21,7 +20,7 @@ const statusLabels: Record<GoodDollarStatus, string> = {
   error: "Needs attention",
 };
 
-export function ClaimPanel({ claimableAmount, claimStatus, goodDollarMessage, nextClaimCountdown, nextClaimTime, verificationLink, onClaim, onVerify, disabled }: ClaimPanelProps) {
+export function ClaimPanel({ claimableAmount, claimStatus, goodDollarMessage, nextClaimCountdown, nextClaimTime, onClaim, onVerify, disabled }: ClaimPanelProps) {
   const isAlreadyClaimed = claimStatus === "claimed" || Boolean(nextClaimTime);
   const needsVerification = claimStatus === "unverified";
   const displayAmount = needsVerification ? "Not eligible yet" : isAlreadyClaimed ? "Already claimed" : claimableAmount;
@@ -35,15 +34,9 @@ export function ClaimPanel({ claimableAmount, claimStatus, goodDollarMessage, ne
         <strong>{displayAmount}</strong>
         <div className={`status-pill status-${claimStatus}`}>{statusLabels[claimStatus]}</div>
         <small>{goodDollarMessage}</small>
-        {needsVerification && (
-          <>
-            <button className="verify-link" onClick={onVerify} type="button">Generate GoodID Face Verification link</button>
-            {verificationLink && <a className="verify-link secondary" href={verificationLink} target="_blank" rel="noreferrer">Open embedded GoodID fvlink URI</a>}
-          </>
-        )}
         {nextClaimTime && <small>Next claim: {nextClaimTime}</small>}
         {nextClaimCountdown && <small>Live countdown: {nextClaimCountdown}</small>}
-        <button onClick={onClaim} disabled={disabled || claimStatus === "loading" || isAlreadyClaimed || needsVerification} type="button">{primaryButtonLabel}</button>
+        <button onClick={needsVerification ? onVerify : onClaim} disabled={disabled || claimStatus === "loading" || isAlreadyClaimed} type="button">{primaryButtonLabel}</button>
       </div>
     </section>
   );
