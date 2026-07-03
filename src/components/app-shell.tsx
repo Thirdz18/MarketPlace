@@ -34,10 +34,11 @@ function WalletApp() {
 
   useEffect(() => {
     if (!address) return;
+    const walletAddress = address;
     let cancelled = false;
     async function loadBalance() {
       try {
-        const raw = await client.readContract({ address: goodDollarCelo.address, abi: erc20BalanceAbi, functionName: "balanceOf", args: [address] });
+        const raw = await client.readContract({ address: goodDollarCelo.address, abi: erc20BalanceAbi, functionName: "balanceOf", args: [walletAddress] });
         if (!cancelled) setBalance(formatUnits(raw, goodDollarCelo.decimals));
       } catch {
         if (!cancelled) setBalance("Unavailable");
