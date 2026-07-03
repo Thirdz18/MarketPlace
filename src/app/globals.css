@@ -347,7 +347,7 @@ button:disabled {
 /* Wallet Main Layout */
 .wallet-main {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
   gap: 20px;
   align-items: start;
 }
@@ -362,9 +362,9 @@ button:disabled {
 /* Balance Cards Grid */
 .balance-cards-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 
 .balance-card-new {
@@ -550,7 +550,7 @@ button:disabled {
   }
   
   .balance-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -849,32 +849,36 @@ button:disabled {
 
 @media (max-width: 560px) {
   .app-layout { 
-    grid-template-columns:82px minmax(0, 1fr); 
-    gap:8px; 
+    grid-template-columns:1fr; 
+    gap:10px; 
     padding:10px; 
-    --dashboard-scale: 0.7;
-    transform: scale(0.7);
-    transform-origin: top left;
+    width:100%;
+    min-height:100vh;
+    --dashboard-scale: 1;
+    transform:none;
   }
   .sidebar { 
-    top:10px; 
-    max-height:calc(100vh - 20px); 
+    position:relative;
+    top:auto; 
+    max-height:none; 
     padding:8px; 
     border-radius:18px; 
+    overflow-x:auto;
   }
-  .brand-block { align-items:center; padding:6px 0 8px; }
+  .brand-block { align-items:center; justify-content:center; padding:6px 0 8px; }
   .brand-block div, .side-button span:last-child { display:none; }
+  .side-nav { grid-template-columns:repeat(6, minmax(52px, 1fr)); }
   .brand-mark { width:44px; height:44px; }
-  .side-button { align-items:center; padding:9px 6px; border-radius:14px; }
+  .side-button { align-items:center; justify-content:center; padding:9px 6px; border-radius:14px; }
   .side-icon { width:40px; height:40px; }
   .cta { align-items:flex-start; flex-direction:column; }
-  .wallet-hero, .claim-panel { transform: scale(1.1); transform-origin: top left; }
+  .wallet-hero, .claim-panel { transform:none; }
 }
 
 @media (max-width: 420px) {
   .app-layout {
-    --dashboard-scale: 0.65;
-    transform: scale(0.65);
+    --dashboard-scale: 1;
+    transform:none;
   }
 }
 
