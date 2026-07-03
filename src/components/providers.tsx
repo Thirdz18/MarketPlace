@@ -15,7 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       appId={appId}
       config={{
         appearance: { theme: "light", accentColor: "#35D07F", logo: undefined },
-        embeddedWallets: { createOnLogin: "users-without-wallets" },
+        embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },
         defaultChain: celoMainnet,
         supportedChains: [celoMainnet, celoSepolia],
         loginMethods: ["email", "wallet", "google"],
