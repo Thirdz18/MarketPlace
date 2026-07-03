@@ -10,7 +10,19 @@ export function WalletPanel({ address, profileStatus, tokens, transactions, tran
         <div className="address-card"><span>Wallet address</span><strong>{address ?? "No wallet detected"}</strong><small>{profileStatus}</small></div>
       </section>
       <section className="token-panel">
-        <div className="section-heading"><div><p className="eyebrow">Supported tokens · Celo Network</p><h2>Crypto</h2></div></div>
+        <div className="section-heading"><div><p className="eyebrow">Supported tokens · Celo Network</p><h2>Crypto balances</h2></div></div>
+        <div className="balance-cards" aria-label="GoodDollar and Celo wallet balances">
+          {tokens.map((token) => (
+            <article className="balance-card" key={`${token.symbol}-balance`}>
+              <span className={`token-icon token-${token.symbol === "G$" ? "gd" : "celo"}`}>{token.symbol}</span>
+              <div>
+                <small>{token.name}</small>
+                <strong>{token.amount} {token.symbol}</strong>
+                {token.note && <small>{token.note}</small>}
+              </div>
+            </article>
+          ))}
+        </div>
         <div className="token-list">
           {tokens.map((token) => (
             <article className="token-row" key={token.symbol}>
