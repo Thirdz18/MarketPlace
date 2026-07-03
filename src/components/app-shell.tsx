@@ -24,6 +24,7 @@ import { supportedWalletTokens, type TokenBalance } from "@/lib/tokens";
 import { createSubmittedClaimTransaction, fetchGoodDollarTransactions, formatCeloBalance, type WalletTransaction } from "@/lib/transactions";
 
 const CLAIM_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+const CLAIM_REFRESH_GRACE_MS = 60 * 1000;
 
 function getClaimCooldownStorageKey(address: Address) {
   return `marketplace:gooddollar-next-claim:${address.toLowerCase()}`;
@@ -129,12 +130,31 @@ function WalletApp() {
       setClaimableAmount(formattedEntitlement);
       setGoodDollarMessage(`Claimable now: ${formattedEntitlement}.`);
     } else {
-      setClaimableAmount(nextClaimAt && nextClaimAt > Date.now() ? "Already claimed" : "—");
-      setGoodDollarMessage("No UBI is claimable right now. Please try again after the next daily claim window.");
+      const latestClaim = (await fetchGoodDollarTransactions(client, address)).find((transaction) => transaction.type === "claim" && transaction.blockNumber);
+      let inferredNextClaimAt: number | undefined;
+
+      if (latestClaim?.blockNumber) {
+        const claimBlock = await client.getBlock({ blockNumber: latestClaim.blockNumber });
+        const claimTime = Number(claimBlock.timestamp) * 1000;
+        const nextClaimTimeFromChain = claimTime + CLAIM_COOLDOWN_MS;
+        inferredNextClaimAt = nextClaimTimeFromChain > Date.now() - CLAIM_REFRESH_GRACE_MS ? nextClaimTimeFromChain : undefined;
+      }
+
+      if (inferredNextClaimAt) {
+        saveNextClaim(inferredNextClaimAt);
+        setClaimableAmount("Already claimed");
+        setGoodDollarMessage("You already claimed today's GoodDollar UBI. The panel will unlock after the next daily claim window.");
+      } else if (nextClaimAt && nextClaimAt > Date.now()) {
+        setClaimableAmount("Already claimed");
+        setGoodDollarMessage("You already claimed today's GoodDollar UBI. The panel will unlock after the next daily claim window.");
+      } else {
+        setClaimableAmount("—");
+        setGoodDollarMessage("No UBI is claimable right now. Please try again after the next daily claim window.");
+      }
     }
 
     return { entitlement, formattedEntitlement };
-  }, [address, clearSavedNextClaim, client, nextClaimAt]);
+  }, [address, clearSavedNextClaim, client, nextClaimAt, saveNextClaim]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
