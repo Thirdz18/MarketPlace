@@ -77,6 +77,26 @@ function WalletApp() {
     }
   }, [address, client]);
 
+  const loadClaimableAmount = useCallback(async () => {
+    if (!address) return undefined;
+
+    const rootAddress = await client.readContract({ address: goodDollarIdentityCelo.address, abi: goodDollarIdentityAbi, functionName: "getWhitelistedRoot", args: [address] });
+
+    if (rootAddress === zeroAddress) {
+      setClaimableAmount("—");
+      setGoodDollarMessage("This wallet is not verified for GoodDollar UBI yet. Verify your GoodDollar identity in GoodWallet/GoodDapp, then come back and claim here.");
+      return undefined;
+    }
+
+    const entitlement = await client.readContract({ address: ubiSchemeCelo.address, abi: ubiSchemeAbi, functionName: "checkEntitlement", args: [rootAddress] });
+    const formattedEntitlement = formatGoodDollarAmount(entitlement);
+
+    setClaimableAmount(formattedEntitlement);
+    setGoodDollarMessage(entitlement > 0n ? `Claimable now: ${formattedEntitlement}.` : "No UBI is claimable right now. Please try again after the next daily claim window.");
+
+    return { entitlement, formattedEntitlement };
+  }, [address, client]);
+
   useEffect(() => {
     if (!address) return;
     let cancelled = false;
@@ -92,6 +112,33 @@ function WalletApp() {
   }, [address, loadBalances]);
 
   useEffect(() => { loadTransactions(); }, [loadTransactions]);
+
+  useEffect(() => {
+    if (!address) {
+      setClaimableAmount("—");
+      setGoodDollarMessage("Connect your wallet to load your daily UBI amount from the GoodDollar contract.");
+      return;
+    }
+
+    let cancelled = false;
+    async function loadClaimPreview() {
+      setClaimStatus("loading");
+      setGoodDollarMessage("Loading your claimable UBI from the GoodDollar contract...");
+      try {
+        await loadClaimableAmount();
+        if (!cancelled) setClaimStatus("idle");
+      } catch (error) {
+        if (!cancelled) {
+          setClaimStatus("error");
+          setClaimableAmount("Unavailable");
+          setGoodDollarMessage(error instanceof Error ? error.message : "Unable to load your claimable UBI amount.");
+        }
+      }
+    }
+
+    loadClaimPreview();
+    return () => { cancelled = true; };
+  }, [address, loadClaimableAmount]);
 
   useEffect(() => {
     if (!authenticated || !address || !user) return;
@@ -113,18 +160,14 @@ function WalletApp() {
     setGoodDollarMessage("Loading your claimable UBI from the GoodDollar contract...");
 
     try {
-      const rootAddress = await client.readContract({ address: goodDollarIdentityCelo.address, abi: goodDollarIdentityAbi, functionName: "getWhitelistedRoot", args: [address] });
+      const claimPreview = await loadClaimableAmount();
 
-      if (rootAddress === zeroAddress) {
-        setClaimableAmount("—");
+      if (!claimPreview) {
         setClaimStatus("error");
-        setGoodDollarMessage("This wallet is not verified for GoodDollar UBI yet. Verify your GoodDollar identity in GoodWallet/GoodDapp, then come back and claim here.");
         return;
       }
 
-      const entitlement = await client.readContract({ address: ubiSchemeCelo.address, abi: ubiSchemeAbi, functionName: "checkEntitlement", args: [rootAddress] });
-      const formattedEntitlement = formatGoodDollarAmount(entitlement);
-      setClaimableAmount(formattedEntitlement);
+      const { entitlement, formattedEntitlement } = claimPreview;
 
       if (entitlement <= 0n) {
         setClaimStatus("success");
@@ -147,6 +190,8 @@ function WalletApp() {
     }
   }
 
+  const isClaimActionDisabled = !address || claimStatus === "loading";
+
   const tokenBalances: TokenBalance[] = [
     { ...supportedWalletTokens[0], amount: gDollarBalance },
     { ...supportedWalletTokens[1], amount: celoBalance },
@@ -163,7 +208,7 @@ function WalletApp() {
       <Sidebar activeModule={activeModule} onSelect={setActiveModule} onLogout={logout} />
       <section className="main-pane">
         {activeModule === "wallet" && <WalletPanel address={address} profileStatus={profileStatus} tokens={tokenBalances} transactions={transactions} transactionsLoading={transactionsLoading} transactionsError={transactionsError} />}
-        {activeModule === "claim" && <ClaimPanel claimableAmount={claimableAmount} claimStatus={claimStatus} goodDollarMessage={goodDollarMessage} onClaim={claimUbi} disabled={!address} />}
+        {activeModule === "claim" && <ClaimPanel claimableAmount={claimableAmount} claimStatus={claimStatus} goodDollarMessage={goodDollarMessage} onClaim={claimUbi} disabled={isClaimActionDisabled} />}
         {activeModule !== "wallet" && activeModule !== "claim" && <PlaceholderPanel moduleId={activeModule} />}
       </section>
     </main>
