@@ -24,3 +24,12 @@ button:hover { transform:translateY(-1px); }
 .warning code { color:var(--gold); }
 .points { display:inline-block; margin-left:16px; color:var(--gold); }
 @media (max-width: 860px) { .grid, .dashboard { grid-template-columns:1fr; } .cta { align-items:flex-start; flex-direction:column; } }
+.gooddollar-panel { display:grid; grid-template-columns:1.2fr .9fr; gap:22px; align-items:start; margin-bottom:24px; }
+.gooddollar-panel code { color:var(--gold); }
+.gooddollar-actions { display:flex; flex-wrap:wrap; gap:12px; }
+.gooddollar-actions button:disabled { cursor:not-allowed; opacity:.58; transform:none; }
+.gooddollar-status { grid-column:1 / -1; display:grid; gap:8px; border-top:1px solid var(--line); padding-top:18px; }
+.gooddollar-status span { color:#9bcfac; font-size:.8rem; text-transform:uppercase; font-weight:900; }
+.gooddollar-status strong { color:#fff; }
+.gooddollar-status small { color:#b7d8c1; }
+@media (max-width: 860px) { .gooddollar-panel { grid-template-columns:1fr; } }
