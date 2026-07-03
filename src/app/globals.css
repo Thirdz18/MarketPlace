@@ -336,86 +336,109 @@ button:disabled {
   font-weight: 700;
   color: var(--text);
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  letter-spacing: 0.05em;
 }
 
-.profile-status {
-  font-size: 0.8rem;
-  color: var(--muted);
-  padding-left: 62px;
+/* Total Balance Section */
+.total-balance {
+  padding: 20px 24px;
+  background: linear-gradient(145deg, rgba(16, 22, 42, 0.98), rgba(10, 14, 26, 0.95));
+  border: 1px solid var(--line);
+  border-radius: 20px;
 }
 
-/* Wallet Main Layout */
-.wallet-main {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  align-items: start;
-}
-
-.balance-column,
-.transactions-column {
+.total-balance-header {
   display: flex;
   flex-direction: column;
+  gap: 6px;
+}
+
+.total-balance-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.total-balance-amount {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--text) 0%, var(--green) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+}
+
+/* Token Cards Section */
+.token-cards-section {
+  margin-top: 4px;
+}
+
+.token-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
-/* Balance Cards Grid */
-.balance-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-  margin-bottom: 16px;
-}
-
-.balance-card-new {
-  background: linear-gradient(145deg, rgba(16, 22, 42, 0.95), rgba(10, 14, 26, 0.9));
+/* Token Card - Match Screenshot Style */
+.token-card {
+  background: linear-gradient(145deg, rgba(16, 22, 42, 0.98), rgba(10, 14, 26, 0.95));
   border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 18px;
+  border-radius: 20px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   transition: all 0.3s ease;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
-.balance-card-new:hover {
+.token-card:hover {
   border-color: var(--green);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(16, 229, 153, 0.15);
+  box-shadow: 0 12px 40px rgba(16, 229, 153, 0.12);
 }
 
-.balance-card-header {
+.token-card-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.balance-card-header small {
-  font-size: 0.85rem;
+.token-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.token-card-info strong {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.token-card-info small {
+  font-size: 0.8rem;
   color: var(--muted);
-  font-weight: 600;
 }
 
-.balance-card-body {
+.token-card-balance {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
 }
 
-.balance-card-body strong {
-  font-size: 1.6rem;
+.token-card-balance strong {
+  font-size: 1.8rem;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text), var(--green));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1.2;
+  color: var(--text);
+  line-height: 1;
 }
 
-.token-symbol-badge {
-  font-size: 0.85rem;
+.token-symbol {
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--purple);
   background: rgba(167, 139, 250, 0.15);
@@ -423,9 +446,48 @@ button:disabled {
   border-radius: 8px;
 }
 
-.balance-note {
+.token-card-note {
   font-size: 0.75rem;
   color: var(--gold);
+}
+
+.token-card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.token-action-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.token-action-btn.primary {
+  background: linear-gradient(135deg, var(--green), #14d6a0);
+  color: #03150b;
+  box-shadow: 0 4px 16px var(--green-glow);
+}
+
+.token-action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--green-glow);
+}
+
+.token-action-btn.secondary {
+  background: rgba(167, 139, 250, 0.15);
+  color: var(--purple);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+}
+
+.token-action-btn.secondary:hover {
+  background: rgba(167, 139, 250, 0.25);
+  border-color: var(--purple);
 }
 
 /* Transaction Loading State */
@@ -498,19 +560,27 @@ button:disabled {
   white-space: nowrap;
 }
 
-/* History Panel Updates */
+/* History Panel - Recent Transactions */
 .history-panel {
-  background: linear-gradient(145deg, rgba(16, 22, 42, 0.95), rgba(10, 14, 26, 0.9));
+  background: linear-gradient(145deg, rgba(16, 22, 42, 0.98), rgba(10, 14, 26, 0.95));
   border: 1px solid var(--line);
   border-radius: 22px;
-  padding: 20px;
-  box-shadow: 0 24px 80px rgba(0,0,0,.26);
-  min-height: 300px;
+  padding: 22px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.history-panel .section-heading {
+  margin-bottom: 16px;
+}
+
+.history-panel h2 {
+  font-size: 1.2rem;
+  margin-bottom: 0;
 }
 
 .transaction-list {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
 .transaction-row {
@@ -518,7 +588,7 @@ button:disabled {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 14px;
-  padding: 14px;
+  padding: 14px 16px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 14px;
@@ -545,20 +615,16 @@ button:disabled {
 
 /* Responsive for Wallet Layout */
 @media (max-width: 900px) {
-  .wallet-main {
+  .token-cards-grid {
     grid-template-columns: 1fr;
   }
   
-  .balance-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .total-balance-amount {
+    font-size: 1.8rem;
   }
 }
 
 @media (max-width: 560px) {
-  .balance-cards-grid {
-    grid-template-columns: 1fr;
-  }
-  
   .wallet-header {
     padding: 16px;
   }
@@ -572,8 +638,25 @@ button:disabled {
     font-size: 1rem;
   }
   
-  .profile-status {
-    padding-left: 54px;
+  .total-balance {
+    padding: 16px 20px;
+  }
+  
+  .total-balance-amount {
+    font-size: 1.6rem;
+  }
+  
+  .token-card {
+    padding: 16px;
+  }
+  
+  .token-card-balance strong {
+    font-size: 1.5rem;
+  }
+  
+  .token-action-btn {
+    padding: 10px 14px;
+    font-size: 0.85rem;
   }
 }
 

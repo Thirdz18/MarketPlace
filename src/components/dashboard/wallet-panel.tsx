@@ -9,6 +9,12 @@ function maskAddress(address: string | undefined): string {
 }
 
 export function WalletPanel({ address, profileStatus, tokens, transactions, transactionsLoading, transactionsError }: { address?: string; profileStatus: string; tokens: TokenBalance[]; transactions: WalletTransaction[]; transactionsLoading: boolean; transactionsError?: string }) {
+  // Calculate total balance in USD (for demo, we'll use a placeholder)
+  const totalBalance = tokens.reduce((acc, token) => {
+    const amount = parseFloat(token.amount.replace(/,/g, '')) || 0;
+    return acc + amount;
+  }, 0);
+
   return (
     <div className="content-stack">
       {/* Wallet Info Header */}
@@ -26,50 +32,45 @@ export function WalletPanel({ address, profileStatus, tokens, transactions, tran
             <strong className="wallet-address">{maskAddress(address)}</strong>
           </div>
         </div>
-        <small className="profile-status">{profileStatus}</small>
       </section>
 
-      {/* Main Content: Balances + Transactions Side by Side */}
-      <section className="wallet-main">
-        {/* Left Column: Balance Cards */}
-        <div className="balance-column">
-          <div className="section-heading"><div><p className="eyebrow">Supported tokens · Celo Network</p><h2>Your balances</h2></div></div>
-          
-          {/* Balance Cards */}
-          <div className="balance-cards-grid" aria-label="GoodDollar and Celo wallet balances">
-            {tokens.map((token) => (
-              <article className="balance-card-new" key={`${token.symbol}-balance`}>
-                <div className="balance-card-header">
-                  <span className={`token-icon token-${token.symbol === "G$" ? "gd" : "celo"}`}>{token.symbol}</span>
-                  <small>{token.name}</small>
-                </div>
-                <div className="balance-card-body">
-                  <strong>{token.amount}</strong>
-                  <span className="token-symbol-badge">{token.symbol}</span>
-                </div>
-                {token.note && <small className="balance-note">{token.note}</small>}
-              </article>
-            ))}
-          </div>
+      {/* Total Balance */}
+      <section className="total-balance panel-lite">
+        <div className="total-balance-header">
+          <span className="total-balance-label">Total Balance</span>
+          <strong className="total-balance-amount">${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+        </div>
+      </section>
 
-          {/* Token List */}
-          <div className="token-list">
-            <div className="section-heading"><div><p className="eyebrow">Token List</p><h3>All tokens</h3></div></div>
-            {tokens.map((token) => (
-              <article className="token-row" key={token.symbol}>
+      {/* Token Cards - Side by Side */}
+      <section className="token-cards-section">
+        <div className="token-cards-grid">
+          {tokens.map((token) => (
+            <article className="token-card" key={`${token.symbol}-card`}>
+              <div className="token-card-header">
                 <span className={`token-icon token-${token.symbol === "G$" ? "gd" : "celo"}`}>{token.symbol}</span>
-                <div><strong>{token.symbol}</strong><small>{token.name}</small></div>
-                <div className="token-amount"><strong>{token.amount} {token.symbol}</strong>{token.note && <small>{token.note}</small>}</div>
-              </article>
-            ))}
-          </div>
-        </div>
-
-        {/* Right Column: Transaction History */}
-        <div className="transactions-column">
-          <TransactionHistory transactions={transactions} loading={transactionsLoading} error={transactionsError} />
+                <div className="token-card-info">
+                  <strong>{token.name}</strong>
+                  <small>{token.symbol === "G$" ? "GoodDollar" : "Celo"}</small>
+                </div>
+              </div>
+              <div className="token-card-balance">
+                <strong>{token.amount}</strong>
+                <span className="token-symbol">{token.symbol}</span>
+              </div>
+              {token.note && <small className="token-card-note">{token.note}</small>}
+              <div className="token-card-actions">
+                <button className="token-action-btn primary">
+                  {token.symbol === "G$" ? "Claim" : "Buy"}
+                </button>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
+
+      {/* Recent Transactions - Below Tokens */}
+      <TransactionHistory transactions={transactions} loading={transactionsLoading} error={transactionsError} />
     </div>
   );
 }
