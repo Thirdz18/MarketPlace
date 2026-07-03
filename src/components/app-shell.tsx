@@ -65,8 +65,12 @@ export function AppShell({ privyConfigured }: { privyConfigured: boolean }) {
 
 function SetupMode() {
   return (
-    <main className="page"><Hero />
-      <section className="panel warning"><h2>Environment setup needed</h2><p>Add <code>NEXT_PUBLIC_PRIVY_APP_ID</code>, <code>NEXT_PUBLIC_SUPABASE_URL</code>, and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to enable wallet onboarding and offchain data. Email, Google, and wallet login are configured in the Privy dashboard; no client secret or client ID belongs in this frontend.</p></section>
+    <main className="page">
+      <Hero />
+      <section className="panel warning animate-in animate-delay-1">
+        <h2>Environment setup needed</h2>
+        <p>Add <code>NEXT_PUBLIC_PRIVY_APP_ID</code>, <code>NEXT_PUBLIC_SUPABASE_URL</code>, and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to enable wallet onboarding and offchain data. Email, Google, and wallet login are configured in the Privy dashboard; no client secret or client ID belongs in this frontend.</p>
+      </section>
     </main>
   );
 }
@@ -312,10 +316,18 @@ function WalletApp() {
     { ...supportedWalletTokens[1], amount: celoBalance },
   ];
 
-  if (!ready) return <main className="page"><Hero /><section className="panel">Loading Privy...</section></main>;
+  if (!ready) return <main className="page"><Hero /><section className="panel animate-in animate-delay-1"><div className="loading-shimmer" style={{height: '60px', borderRadius: '12px'}}></div></section></main>;
 
   if (!authenticated) {
-    return <main className="page"><Hero /><section className="cta"><button onClick={login}>Get Started — Create Celo Wallet</button><p>Sign in with email, Google, or connect an existing wallet. Privy will create a Celo-ready embedded wallet for users who do not already have one, then unlock your mini app dashboard.</p></section></main>;
+    return (
+      <main className="page">
+        <Hero />
+        <section className="cta animate-in animate-delay-1">
+          <button onClick={login}>Get Started — Create Celo Wallet</button>
+          <p>Sign in with email, Google, or connect an existing wallet. Privy will create a Celo-ready embedded wallet for users who do not already have one, then unlock your mini app dashboard.</p>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -330,4 +342,12 @@ function WalletApp() {
   );
 }
 
-function Hero() { return <section className="hero"><p className="eyebrow">Celo + GoodDollar mini app platform</p><h1>Welcome to MarketPlace Hub</h1><p>Play, save, complete tasks, and grow future utility around your Privy wallet and G$ balance.</p></section>; }
+function Hero() { 
+  return (
+    <section className="hero">
+      <p className="eyebrow animate-in">Celo + GoodDollar mini app platform</p>
+      <h1 className="animate-in animate-delay-1">Welcome to MarketPlace Hub</h1>
+      <p className="animate-in animate-delay-2">Play, save, complete tasks, and grow future utility around your Privy wallet and G$ balance.</p>
+    </section>
+  ); 
+}
