@@ -3,6 +3,33 @@ import { goodDollarCelo } from "@/lib/celo";
 import { ubiSchemeCelo } from "@/lib/gooddollar";
 
 const transferEvent = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
+const celoLogRangeLimit = 5_000n;
+const transactionLookbackBlocks = 100_000n;
+
+async function getTransferLogsInChunks(
+  client: PublicClient,
+  args: { from?: Address; to?: Address },
+  fromBlock: bigint,
+  toBlock: bigint,
+) {
+  const logs = [];
+
+  for (let chunkStart = fromBlock; chunkStart <= toBlock; chunkStart += celoLogRangeLimit) {
+    const chunkEnd = chunkStart + celoLogRangeLimit - 1n > toBlock ? toBlock : chunkStart + celoLogRangeLimit - 1n;
+
+    logs.push(
+      ...(await client.getLogs({
+        address: goodDollarCelo.address,
+        event: transferEvent,
+        args,
+        fromBlock: chunkStart,
+        toBlock: chunkEnd,
+      })),
+    );
+  }
+
+  return logs;
+}
 
 export type WalletTransaction = {
   id: string;
@@ -29,25 +56,13 @@ export function createSubmittedClaimTransaction(hash: string, amount: string): W
 
 export async function fetchGoodDollarTransactions(client: PublicClient, walletAddress: Address): Promise<WalletTransaction[]> {
   const latestBlock = await client.getBlockNumber();
-  const fromBlock = latestBlock > 100_000n ? latestBlock - 100_000n : 0n;
+  const fromBlock = latestBlock > transactionLookbackBlocks ? latestBlock - transactionLookbackBlocks : 0n;
   const normalizedWallet = walletAddress.toLowerCase();
   const normalizedUbiScheme = ubiSchemeCelo.address.toLowerCase();
 
   const [incomingLogs, outgoingLogs] = await Promise.all([
-    client.getLogs({
-      address: goodDollarCelo.address,
-      event: transferEvent,
-      args: { to: walletAddress },
-      fromBlock,
-      toBlock: latestBlock,
-    }),
-    client.getLogs({
-      address: goodDollarCelo.address,
-      event: transferEvent,
-      args: { from: walletAddress },
-      fromBlock,
-      toBlock: latestBlock,
-    }),
+    getTransferLogsInChunks(client, { to: walletAddress }, fromBlock, latestBlock),
+    getTransferLogsInChunks(client, { from: walletAddress }, fromBlock, latestBlock),
   ]);
 
   const byLog = new Map<string, WalletTransaction>();
