@@ -51,9 +51,11 @@ function WalletApp() {
   useEffect(() => {
     if (!authenticated || !address || !user) return;
     if (!isSupabaseConfigured || !supabase) { setProfileStatus("Supabase not configured; wallet session is local only."); return; }
+    const walletAddress = address;
+    const privyUserId = user.id;
     let cancelled = false;
     async function upsertProfile() {
-      const { error } = await supabase!.from("profiles").upsert({ privy_user_id: user.id, wallet_address: address, preferred_chain_id: celoMainnet.id, updated_at: new Date().toISOString() }, { onConflict: "privy_user_id" });
+      const { error } = await supabase!.from("profiles").upsert({ privy_user_id: privyUserId, wallet_address: walletAddress, preferred_chain_id: celoMainnet.id, updated_at: new Date().toISOString() }, { onConflict: "privy_user_id" });
       if (!cancelled) setProfileStatus(error ? `Profile sync failed: ${error.message}` : "Supabase profile synced.");
     }
     upsertProfile();
