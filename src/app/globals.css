@@ -61,16 +61,27 @@ button:disabled { cursor:not-allowed; opacity:.58; }
   .wallet-hero { grid-template-columns:1fr; }
 }
 @media (max-width: 900px) {
-  .app-layout { --dashboard-scale:1; width:100%; min-height:100vh; grid-template-columns:1fr; padding:14px; transform:none; }
-  .sidebar { position:static; height:auto; }
-  .side-nav { grid-template-columns:repeat(2, minmax(0, 1fr)); }
-  .logout-button { margin-top:0; }
+  .app-layout { --dashboard-scale:1; width:100%; min-height:100vh; grid-template-columns:clamp(86px, 34vw, 190px) minmax(0, 1fr); gap:10px; padding:12px; transform:none; }
+  .sidebar { position:sticky; top:12px; max-height:calc(100vh - 24px); height:auto; padding:10px; }
+  .brand-block { align-items:flex-start; flex-direction:column; gap:8px; padding:8px 4px 10px; }
+  .side-nav { grid-template-columns:1fr; }
+  .side-button { align-items:flex-start; flex-direction:column; gap:8px; padding:10px 8px; }
+  .logout-button { margin-top:auto; }
   .wallet-hero, .claim-panel { grid-template-columns:1fr; min-height:auto; }
   .token-row, .transaction-row { grid-template-columns:auto 1fr; }
   .token-amount, .transaction-row > strong:last-child { grid-column:2; text-align:left; }
 }
 @media (max-width: 700px) { .balance-cards { grid-template-columns:1fr; } }
-@media (max-width: 560px) { .side-nav { grid-template-columns:1fr; } .cta { align-items:flex-start; flex-direction:column; } }
+@media (max-width: 560px) {
+  .app-layout { grid-template-columns:82px minmax(0, 1fr); gap:8px; padding:10px; }
+  .sidebar { top:10px; max-height:calc(100vh - 20px); padding:8px; border-radius:18px; }
+  .brand-block { align-items:center; padding:6px 0 8px; }
+  .brand-block div, .side-button span:last-child { display:none; }
+  .brand-mark { width:44px; height:44px; }
+  .side-button { align-items:center; padding:9px 6px; border-radius:14px; }
+  .side-icon { width:40px; height:40px; }
+  .cta { align-items:flex-start; flex-direction:column; }
+}
 .status-pill { width:max-content; max-width:100%; border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:7px 10px; color:#dfe6ff; background:rgba(255,255,255,.06); font-size:.78rem; font-weight:900; letter-spacing:.04em; text-transform:uppercase; }
 .status-success { border-color:rgba(53,208,127,.45); color:#9ff0c2; background:rgba(53,208,127,.12); }
 .status-claimed { border-color:rgba(247,201,72,.45); color:#ffe39a; background:rgba(247,201,72,.12); }
