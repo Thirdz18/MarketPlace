@@ -1,6 +1,10 @@
-export const featureModules = [
-  { title: "Minigames", description: "Tap, quiz, and spin games with Supabase points.", status: "Active", href: "#minigames" },
-  { title: "Savings", description: "Track savings goals offchain first, then evolve to Celo vaults.", status: "Planned", href: "#savings" },
-  { title: "Daily Tasks", description: "Telegram, X, referrals, and proof-based reward tasks.", status: "Planned", href: "#tasks" },
-  { title: "Airtime/Data", description: "Future G$-powered airtime and mobile data purchases.", status: "Future", href: "#airtime" },
-] as const;
+export type DashboardModuleId = "wallet" | "claim" | "savings" | "learn" | "play" | "topup";
+
+export const dashboardModules = [
+  { id: "wallet", label: "Wallet", icon: "⇄", description: "Balances and transaction history" },
+  { id: "claim", label: "Claim", icon: "G$", description: "Claim daily GoodDollar UBI" },
+  { id: "savings", label: "Savings", icon: "🏦", description: "Savings goals and future Celo vaults" },
+  { id: "learn", label: "Learn & Earn", icon: "📚", description: "Education tasks and rewards" },
+  { id: "play", label: "Play & Earn", icon: "🎮", description: "Minigames and reward loops" },
+  { id: "topup", label: "Mobile Top Up", icon: "📱", description: "Airtime and mobile data utility" },
+] as const satisfies ReadonlyArray<{ id: DashboardModuleId; label: string; icon: string; description: string }>;
