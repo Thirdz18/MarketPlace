@@ -23,6 +23,25 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { supportedWalletTokens, type TokenBalance } from "@/lib/tokens";
 import { createSubmittedClaimTransaction, fetchGoodDollarTransactions, formatCeloBalance, type WalletTransaction } from "@/lib/transactions";
 
+const CLAIM_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+function getClaimCooldownStorageKey(address: Address) {
+  return `marketplace:gooddollar-next-claim:${address.toLowerCase()}`;
+}
+
+function formatNextClaimTime(timestamp: number) {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "medium" }).format(new Date(timestamp));
+}
+
+function formatCountdown(milliseconds: number) {
+  const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${hours}h ${minutes.toString().padStart(2, "0")}m ${seconds.toString().padStart(2, "0")}s`;
+}
+
 export function AppShell({ privyConfigured }: { privyConfigured: boolean }) {
   if (!privyConfigured) return <SetupMode />;
   return <WalletApp />;
@@ -48,11 +67,25 @@ function WalletApp() {
   const [claimStatus, setClaimStatus] = useState<GoodDollarStatus>("idle");
   const [goodDollarMessage, setGoodDollarMessage] = useState("Click the button to load your daily UBI amount from the GoodDollar contract.");
   const [claimableAmount, setClaimableAmount] = useState("—");
+  const [nextClaimAt, setNextClaimAt] = useState<number>();
+  const [now, setNow] = useState(() => Date.now());
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [transactionsError, setTransactionsError] = useState<string>();
 
   const client = useMemo(() => createPublicClient({ chain: celoMainnet, transport: http() }), []);
+  const nextClaimTime = nextClaimAt && nextClaimAt > now ? formatNextClaimTime(nextClaimAt) : undefined;
+  const nextClaimCountdown = nextClaimAt && nextClaimAt > now ? formatCountdown(nextClaimAt - now) : undefined;
+
+  const clearSavedNextClaim = useCallback(() => {
+    setNextClaimAt(undefined);
+    if (address && typeof window !== "undefined") localStorage.removeItem(getClaimCooldownStorageKey(address));
+  }, [address]);
+
+  const saveNextClaim = useCallback((timestamp: number) => {
+    setNextClaimAt(timestamp);
+    if (address && typeof window !== "undefined") localStorage.setItem(getClaimCooldownStorageKey(address), timestamp.toString());
+  }, [address]);
 
   const loadBalances = useCallback(async () => {
     if (!address) return;
@@ -91,11 +124,32 @@ function WalletApp() {
     const entitlement = await client.readContract({ address: ubiSchemeCelo.address, abi: ubiSchemeAbi, functionName: "checkEntitlement", args: [rootAddress] });
     const formattedEntitlement = formatGoodDollarAmount(entitlement);
 
-    setClaimableAmount(formattedEntitlement);
-    setGoodDollarMessage(entitlement > 0n ? `Claimable now: ${formattedEntitlement}.` : "No UBI is claimable right now. Please try again after the next daily claim window.");
+    if (entitlement > 0n) {
+      clearSavedNextClaim();
+      setClaimableAmount(formattedEntitlement);
+      setGoodDollarMessage(`Claimable now: ${formattedEntitlement}.`);
+    } else {
+      setClaimableAmount(nextClaimAt && nextClaimAt > Date.now() ? "Already claimed" : "—");
+      setGoodDollarMessage("No UBI is claimable right now. Please try again after the next daily claim window.");
+    }
 
     return { entitlement, formattedEntitlement };
-  }, [address, client]);
+  }, [address, clearSavedNextClaim, client, nextClaimAt]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!address || typeof window === "undefined") {
+      setNextClaimAt(undefined);
+      return;
+    }
+
+    const savedNextClaimAt = Number(localStorage.getItem(getClaimCooldownStorageKey(address)));
+    setNextClaimAt(Number.isFinite(savedNextClaimAt) && savedNextClaimAt > Date.now() ? savedNextClaimAt : undefined);
+  }, [address]);
 
   useEffect(() => {
     if (!address) return;
@@ -181,6 +235,8 @@ function WalletApp() {
 
       setGoodDollarMessage(`UBI claim submitted. Transaction: ${hash}`);
       setTransactions((current) => [createSubmittedClaimTransaction(hash, formattedEntitlement), ...current]);
+      setClaimableAmount("Already claimed");
+      saveNextClaim(Date.now() + CLAIM_COOLDOWN_MS);
       setClaimStatus("success");
       await Promise.allSettled([loadBalances(), loadTransactions()]);
     } catch (error) {
@@ -190,7 +246,7 @@ function WalletApp() {
     }
   }
 
-  const isClaimActionDisabled = !address || claimStatus === "loading";
+  const isClaimActionDisabled = !address || claimStatus === "loading" || Boolean(nextClaimTime);
 
   const tokenBalances: TokenBalance[] = [
     { ...supportedWalletTokens[0], amount: gDollarBalance },
@@ -208,7 +264,7 @@ function WalletApp() {
       <Sidebar activeModule={activeModule} onSelect={setActiveModule} onLogout={logout} />
       <section className="main-pane">
         {activeModule === "wallet" && <WalletPanel address={address} profileStatus={profileStatus} tokens={tokenBalances} transactions={transactions} transactionsLoading={transactionsLoading} transactionsError={transactionsError} />}
-        {activeModule === "claim" && <ClaimPanel claimableAmount={claimableAmount} claimStatus={claimStatus} goodDollarMessage={goodDollarMessage} onClaim={claimUbi} disabled={isClaimActionDisabled} />}
+        {activeModule === "claim" && <ClaimPanel claimableAmount={claimableAmount} claimStatus={claimStatus} goodDollarMessage={goodDollarMessage} nextClaimCountdown={nextClaimCountdown} nextClaimTime={nextClaimTime} onClaim={claimUbi} disabled={isClaimActionDisabled} />}
         {activeModule !== "wallet" && activeModule !== "claim" && <PlaceholderPanel moduleId={activeModule} />}
       </section>
     </main>
