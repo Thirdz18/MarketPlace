@@ -43,7 +43,7 @@ function getNextGoodDollarClaimWindow(timestamp = Date.now()) {
 
 function formatNextClaimTime(timestamp: number) {
   const localTime = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(timestamp));
-  const utcTime = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short", timeZone: "UTC", timeZoneName: "short" }).format(new Date(timestamp));
+  const utcTime = new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" }).format(new Date(timestamp));
 
   return `${localTime} (${utcTime} / ${GOODDOLLAR_CLAIM_WINDOW_PH_TIME})`;
 }
