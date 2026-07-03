@@ -77,3 +77,6 @@ button:disabled { cursor:not-allowed; opacity:.58; }
 .status-unverified, .status-error { border-color:rgba(255,107,107,.45); color:#ffb4b4; background:rgba(255,107,107,.12); }
 .verify-link { display:inline-flex; align-items:center; justify-content:center; width:100%; border:1px solid rgba(247,201,72,.48); border-radius:999px; padding:12px 16px; color:#ffe39a; background:rgba(247,201,72,.1); font-weight:900; text-decoration:none; text-align:center; }
 .verify-link:hover { border-color:var(--gold); background:rgba(247,201,72,.16); }
+.claim-card .verify-link { display:inline-flex; align-items:center; justify-content:center; width:100%; border:1px solid rgba(247,201,72,.48); border-radius:999px; padding:12px 16px; color:#ffe39a; background:rgba(247,201,72,.1); box-shadow:none; font-weight:900; text-decoration:none; text-align:center; }
+.claim-card .verify-link:hover { border-color:var(--gold); background:rgba(247,201,72,.16); }
+.claim-card .verify-link.secondary { border-color:rgba(53,208,127,.44); color:#9ff0c2; background:rgba(53,208,127,.1); }

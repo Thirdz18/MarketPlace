@@ -3,6 +3,35 @@ import { celoMainnet, goodDollarCelo } from "@/lib/celo";
 
 export type GoodDollarStatus = "idle" | "loading" | "success" | "claimed" | "unverified" | "error";
 
+
+const GOODID_FACE_VERIFICATION_URL = "https://goodid.gooddollar.org/";
+const GOODID_IDENTIFIER_MESSAGE = "Sign this message to generate your anonymous GoodDollar Face Verification identifier.";
+
+export type GoodIdFaceVerificationLinkParams = {
+  address: Address;
+  signature: string;
+  firstName?: string;
+  callbackUrl?: string;
+  popupMode?: boolean;
+  chainId?: number;
+};
+
+export function getGoodIdIdentifierMessage(address: Address) {
+  return `${GOODID_IDENTIFIER_MESSAGE}\n\nWallet: ${address}`;
+}
+
+export function createGoodIdFaceVerificationLink({ address, signature, firstName = "friend", callbackUrl, popupMode = false, chainId = celoMainnet.id }: GoodIdFaceVerificationLinkParams) {
+  const url = new URL(GOODID_FACE_VERIFICATION_URL);
+  url.searchParams.set("firstName", firstName);
+  url.searchParams.set("account", address);
+  url.searchParams.set("signature", signature);
+  url.searchParams.set("chainId", chainId.toString());
+  url.searchParams.set("popupMode", popupMode ? "true" : "false");
+  if (callbackUrl) url.searchParams.set("callbackUrl", callbackUrl);
+
+  return url.toString();
+}
+
 export const ubiSchemeCelo = {
   name: "GoodDollar UBI Scheme",
   address: "0x43d72Ff17701B2DA814620735C39C620Ce0ea4A1" as Address,
