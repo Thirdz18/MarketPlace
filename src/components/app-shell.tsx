@@ -23,15 +23,29 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { supportedWalletTokens, type TokenBalance } from "@/lib/tokens";
 import { createSubmittedClaimTransaction, fetchGoodDollarTransactions, formatCeloBalance, type WalletTransaction } from "@/lib/transactions";
 
-const CLAIM_COOLDOWN_MS = 24 * 60 * 60 * 1000;
-const CLAIM_REFRESH_GRACE_MS = 60 * 1000;
+const GOODDOLLAR_CLAIM_WINDOW_UTC_HOUR = 12;
+const GOODDOLLAR_CLAIM_WINDOW_PH_TIME = "8:00 PM Philippines time";
 
 function getClaimCooldownStorageKey(address: Address) {
   return `marketplace:gooddollar-next-claim:${address.toLowerCase()}`;
 }
 
+function getNextGoodDollarClaimWindow(timestamp = Date.now()) {
+  const nextWindow = new Date(timestamp);
+  nextWindow.setUTCHours(GOODDOLLAR_CLAIM_WINDOW_UTC_HOUR, 0, 0, 0);
+
+  if (nextWindow.getTime() <= timestamp) {
+    nextWindow.setUTCDate(nextWindow.getUTCDate() + 1);
+  }
+
+  return nextWindow.getTime();
+}
+
 function formatNextClaimTime(timestamp: number) {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "medium" }).format(new Date(timestamp));
+  const localTime = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(timestamp));
+  const utcTime = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short", timeZone: "UTC", timeZoneName: "short" }).format(new Date(timestamp));
+
+  return `${localTime} (${utcTime} / ${GOODDOLLAR_CLAIM_WINDOW_PH_TIME})`;
 }
 
 function formatCountdown(milliseconds: number) {
@@ -130,26 +144,15 @@ function WalletApp() {
       setClaimableAmount(formattedEntitlement);
       setGoodDollarMessage(`Claimable now: ${formattedEntitlement}.`);
     } else {
-      const latestClaim = (await fetchGoodDollarTransactions(client, address)).find((transaction) => transaction.type === "claim" && transaction.blockNumber);
-      let inferredNextClaimAt: number | undefined;
+      const inferredNextClaimAt = getNextGoodDollarClaimWindow();
 
-      if (latestClaim?.blockNumber) {
-        const claimBlock = await client.getBlock({ blockNumber: latestClaim.blockNumber });
-        const claimTime = Number(claimBlock.timestamp) * 1000;
-        const nextClaimTimeFromChain = claimTime + CLAIM_COOLDOWN_MS;
-        inferredNextClaimAt = nextClaimTimeFromChain > Date.now() - CLAIM_REFRESH_GRACE_MS ? nextClaimTimeFromChain : undefined;
-      }
-
-      if (inferredNextClaimAt) {
-        saveNextClaim(inferredNextClaimAt);
-        setClaimableAmount("Already claimed");
-        setGoodDollarMessage("You already claimed today's GoodDollar UBI. The panel will unlock after the next daily claim window.");
-      } else if (nextClaimAt && nextClaimAt > Date.now()) {
+      if (nextClaimAt && nextClaimAt > Date.now()) {
         setClaimableAmount("Already claimed");
         setGoodDollarMessage("You already claimed today's GoodDollar UBI. The panel will unlock after the next daily claim window.");
       } else {
-        setClaimableAmount("—");
-        setGoodDollarMessage("No UBI is claimable right now. Please try again after the next daily claim window.");
+        saveNextClaim(inferredNextClaimAt);
+        setClaimableAmount("Already claimed");
+        setGoodDollarMessage("You already claimed today's GoodDollar UBI. GoodDollar resets daily at 12:00 PM UTC / 8:00 PM Philippines time.");
       }
     }
 
@@ -256,7 +259,7 @@ function WalletApp() {
       setGoodDollarMessage(`UBI claim submitted. Transaction: ${hash}`);
       setTransactions((current) => [createSubmittedClaimTransaction(hash, formattedEntitlement), ...current]);
       setClaimableAmount("Already claimed");
-      saveNextClaim(Date.now() + CLAIM_COOLDOWN_MS);
+      saveNextClaim(getNextGoodDollarClaimWindow());
       setClaimStatus("success");
       await Promise.allSettled([loadBalances(), loadTransactions()]);
     } catch (error) {
