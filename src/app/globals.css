@@ -284,12 +284,297 @@ button:disabled {
 .main-pane { min-width:0; overflow:hidden; }
 .content-stack { display:grid; gap:14px; }
 
-/* Wallet Hero */
+/* Wallet Hero - Deprecated, replaced by wallet-header */
 .wallet-hero { 
   display:grid; 
   grid-template-columns:minmax(0, 1fr) minmax(240px, 360px); 
   gap:16px; 
   align-items:stretch; 
+}
+
+/* Wallet Header with Masked Address */
+.wallet-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+}
+
+.wallet-header-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wallet-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  display: grid;
+  place-items: center;
+  color: white;
+  box-shadow: 0 4px 20px var(--purple-glow);
+}
+
+.wallet-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wallet-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.wallet-address {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+}
+
+.profile-status {
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding-left: 62px;
+}
+
+/* Wallet Main Layout */
+.wallet-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.balance-column,
+.transactions-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Balance Cards Grid */
+.balance-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.balance-card-new {
+  background: linear-gradient(145deg, rgba(16, 22, 42, 0.95), rgba(10, 14, 26, 0.9));
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.balance-card-new:hover {
+  border-color: var(--green);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(16, 229, 153, 0.15);
+}
+
+.balance-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.balance-card-header small {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.balance-card-body {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.balance-card-body strong {
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--text), var(--green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+}
+
+.token-symbol-badge {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--purple);
+  background: rgba(167, 139, 250, 0.15);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.balance-note {
+  font-size: 0.75rem;
+  color: var(--gold);
+}
+
+/* Transaction Loading State */
+.tx-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+.tx-loading-item {
+  height: 48px;
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0.05) 25%, 
+    rgba(255,255,255,0.1) 50%, 
+    rgba(255,255,255,0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+/* Transaction Empty State */
+.tx-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background: linear-gradient(145deg, rgba(16, 22, 42, 0.5), rgba(10, 14, 26, 0.5));
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  margin: 16px 0;
+}
+
+.tx-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(167, 139, 250, 0.1);
+  display: grid;
+  place-items: center;
+  color: var(--purple);
+  margin-bottom: 16px;
+}
+
+.tx-empty p {
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.tx-empty small {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Transaction Details */
+.tx-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tx-amount {
+  font-size: 1rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* History Panel Updates */
+.history-panel {
+  background: linear-gradient(145deg, rgba(16, 22, 42, 0.95), rgba(10, 14, 26, 0.9));
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 24px 80px rgba(0,0,0,.26);
+  min-height: 300px;
+}
+
+.transaction-list {
+  display: grid;
+  gap: 8px;
+}
+
+.transaction-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+
+.transaction-row:hover {
+  background: rgba(16, 229, 153, 0.05);
+  border-color: rgba(16, 229, 153, 0.2);
+}
+
+/* Token List Updates */
+.token-list {
+  background: linear-gradient(145deg, rgba(16, 22, 42, 0.7), rgba(10, 14, 26, 0.7));
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.token-list h3 {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+/* Responsive for Wallet Layout */
+@media (max-width: 900px) {
+  .wallet-main {
+    grid-template-columns: 1fr;
+  }
+  
+  .balance-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .balance-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .wallet-header {
+    padding: 16px;
+  }
+  
+  .wallet-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .wallet-address {
+    font-size: 1rem;
+  }
+  
+  .profile-status {
+    padding-left: 54px;
+  }
 }
 
 .address-card, .claim-card { 
