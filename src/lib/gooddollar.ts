@@ -15,11 +15,18 @@ type GoodIdIdentitySdk = {
   generateFVLink: (popupMode?: boolean, callbackUrl?: string, chainId?: number) => Promise<string>;
 };
 
+type GoodIdIdentitySdkConstructor = new (params: {
+  account: Address;
+  publicClient: ReturnType<typeof createPublicClient>;
+  walletClient: GoodIdFaceVerificationLinkParams["walletClient"];
+  env: "production";
+}) => GoodIdIdentitySdk;
+
 export async function createGoodIdFaceVerificationLink({ walletClient, callbackUrl, popupMode = false, chainId = celoMainnet.id }: GoodIdFaceVerificationLinkParams) {
-  const importCitizenSdk = new Function("packageName", "return import(packageName)") as (packageName: string) => Promise<{ IdentitySDK: new (...args: unknown[]) => GoodIdIdentitySdk }> ;
+  const importCitizenSdk = new Function("packageName", "return import(packageName)") as (packageName: string) => Promise<{ IdentitySDK: GoodIdIdentitySdkConstructor }> ;
   const { IdentitySDK } = await importCitizenSdk("https://esm.sh/@goodsdks/citizen-sdk");
   const publicClient = createPublicClient({ chain: celoMainnet, transport: http() });
-  const identitySdk = new IdentitySDK(publicClient, walletClient, "production") as GoodIdIdentitySdk;
+  const identitySdk = new IdentitySDK({ account: walletClient.account.address, publicClient, walletClient, env: "production" });
 
   return identitySdk.generateFVLink(popupMode, callbackUrl, chainId);
 }
